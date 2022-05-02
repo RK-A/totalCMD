@@ -20,17 +20,37 @@ namespace totalCMD
         private string oldNameLeft;
         private string oldNameRight;
 
+        public Color CurrentColor { get; private set; }
+
         public MainForm()
         {
             InitializeComponent();
-            
-            homeDirectory = @"C:\Users\kiril\Downloads";
-            currentDirectoryLeft = @"C:\Users\kiril\Downloads";
+            SetSettings();
             // Добавляет файлы домшней директории в левую часть
             GoPathLeft(homeDirectory);
+            currentDirectoryLeft = string.Join("\\", homeDirectory.Split('\\').Skip(1));
             tbPathLeft.Text = currentDirectoryLeft;
-            
+            this.panelTools.BackColor = CurrentColor;
         }
+
+        private void SetSettings()
+        {
+            string path = $"{Environment.CurrentDirectory}\\Resources\\setting.txt";
+            if (!File.Exists(path))
+            {
+                homeDirectory = "";
+                return;
+            }
+            string[] data = File.ReadAllLines(path);
+            homeDirectory = data[0];
+            int colorId;
+            if (int.TryParse(data[1],out colorId))
+            {
+                CurrentColor = Color.FromArgb(colorId);
+            }
+
+        }
+
         private List<object[]> GetObjectsInFolder(string path, ref string currentDirectory)
         {
             var answer = new List<object[]>();
@@ -72,10 +92,6 @@ namespace totalCMD
             dgViewLeft.Width = splitContainer.Panel1.Width;
         }
 
-        private void splitContainer_Panel2_SizeChanged(object sender, EventArgs e)
-        {
-            dgViewRight.Width = splitContainer.Panel2.Width - panelTools.Width;
-        }
         
         private void MainForm_Load(object sender, EventArgs e)
         {
@@ -84,7 +100,6 @@ namespace totalCMD
 
             cbRight.Items.AddRange(DriveInfo.GetDrives());
             cbRight.SelectedIndex = 0;
-            panelTools.Width = cbRight.Width;
             this.Width += 1;
         }
         /// <summary>
@@ -174,8 +189,8 @@ namespace totalCMD
         /// <param name="e"></param>
         private void createToolStripLeft_Click(object sender, EventArgs e)
         {
-
-            using (var form = new CreateFolderOrFile(cbLeft.Text + currentDirectoryLeft))
+            
+            using (var form = new CreateFolderOrFile(cbLeft.Text + currentDirectoryLeft, MousePosition))
             {
                 if (form.ShowDialog() == DialogResult.OK)
                 {
@@ -201,7 +216,8 @@ namespace totalCMD
                 {
                     if (CheckIsFolderLeft(row.Index))
                     {
-                        DeleteDir(cbLeft.Text + currentDirectoryLeft + "\\" + row.Cells[0].Value);
+                        string nameFolder = row.Cells[0].Value.ToString().Replace("[", "").Replace("]", "");
+                        DeleteDir(cbLeft.Text + currentDirectoryLeft + "\\" + nameFolder);
                     }
                     else
                     {
@@ -305,6 +321,18 @@ namespace totalCMD
         private bool CheckIsFolderLeft(int index)
         {
             return dgViewLeft.Rows[index].Cells[1].Value.Equals("<DIR>");
+        }
+        /// <summary>
+        /// Обрабатывает когда фокус падает на левую таблицу
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void dgViewLeft_RowEnter(object sender, DataGridViewCellEventArgs e)
+        {
+            if (dgViewRight.SelectedRows.Count > 0)
+            {
+                dgViewRight.ClearSelection();
+            }
         }
         #endregion
 
@@ -427,7 +455,7 @@ namespace totalCMD
 
         private void createToolStripRight_Click(object sender, EventArgs e)
         {
-            using (var form = new CreateFolderOrFile(cbRight.Text + currentDirectoryRight))
+            using (var form = new CreateFolderOrFile(cbRight.Text + currentDirectoryRight, MousePosition))
             {
                 if (form.ShowDialog() == DialogResult.OK)
                 {
@@ -438,6 +466,7 @@ namespace totalCMD
 
         private void deleteToolStripRight_Click(object sender, EventArgs e)
         {
+            //  Надо добавить асинк
             var result = MessageBox.Show("Do you really want to delete", "Warning", MessageBoxButtons.OKCancel);
             if (result == DialogResult.Cancel)
             {
@@ -449,7 +478,8 @@ namespace totalCMD
                 {
                     if (CheckIsFolderRight(row.Index))
                     {
-                        DeleteDir(cbRight.Text + currentDirectoryRight + "\\" + row.Cells[0].Value);
+                        string nameFolder = row.Cells[0].Value.ToString().Replace("[","").Replace("]","");
+                        DeleteDir(cbRight.Text + currentDirectoryRight + "\\" + nameFolder);
                     }
                     else
                     {
@@ -470,27 +500,86 @@ namespace totalCMD
             dgViewRight.BeginEdit(true);
         }
 
+        private void dgViewRight_RowEnter(object sender, DataGridViewCellEventArgs e)
+        {
+            if (dgViewLeft.SelectedRows.Count > 0)
+            {
+                dgViewLeft.ClearSelection();
+            }
+        }
+
         #endregion
 
         private void copyToolStripLeft_Click(object sender, EventArgs e)
         {
-
-        }
-
-        private void dgViewLeft_RowEnter(object sender, DataGridViewCellEventArgs e)
-        {
-            if (dgViewRight.SelectedRows.Count>0)
+            if (dgViewLeft.SelectedRows.Count==1)
             {
-                dgViewRight.ClearSelection();
+                string nameFileOrDir = dgViewLeft.CurrentRow.Cells[0].Value.ToString();
+                string oldPath = cbLeft.Text + currentDirectoryLeft + "\\" + nameFileOrDir;
+                string newPath = cbRight.Text + currentDirectoryRight + "\\" + nameFileOrDir;
+                if (CheckIsFolderLeft(dgViewLeft.CurrentRow.Index))
+                {
+                    //Должен быть асинк
+                    //CopyDirectory();
+                    return;
+                }
+                if (File.Exists(newPath) && MessageBox.Show("File is exist, overwrite it ?", "Warning", MessageBoxButtons.OKCancel) == DialogResult.OK)
+                {
+                    File.Copy(oldPath, newPath, true);
+                    GoPathRight(cbRight.Text + currentDirectoryRight);
+                    return;
+                }
+                if (File.Exists(newPath))
+                    return;
+                File.Copy(oldPath, newPath);
+                GoPathRight(cbRight.Text + currentDirectoryRight);
+                return;
             }
+            // Асинк метод копирования группы файлов
         }
 
-        private void dgViewRight_RowEnter(object sender, DataGridViewCellEventArgs e)
+        private void bCreate_Click(object sender, EventArgs e)
         {
             if (dgViewLeft.SelectedRows.Count>0)
             {
-                dgViewLeft.ClearSelection();
+                createToolStripLeft.PerformClick();
+                return;
             }
+            createToolStripRight.PerformClick();
+        }
+
+        private void bSetting_Click(object sender, EventArgs e)
+        {
+            
+            using (var settingForm = new SettingsForm(homeDirectory))
+            {
+                settingForm.Font = this.Font;
+                settingForm.BackColor = this.CurrentColor;
+                if (settingForm.ShowDialog()!=DialogResult.OK)
+                {
+                    return;
+                }
+                this.Font = settingForm.CurrentFont;
+                CurrentColor = settingForm.CurrentColor;
+                this.Width += 1;
+                this.panelTools.BackColor = CurrentColor;
+                
+            }
+        }
+
+        private void bDelete_Click(object sender, EventArgs e)
+        {
+            if (dgViewLeft.SelectedRows.Count > 0)
+            {
+                deleteToolStripLeft.PerformClick();
+                return;
+            }
+            deleteToolStripRight.PerformClick();
+        }
+
+        private void rightPanelInSplit_SizeChanged(object sender, EventArgs e)
+        {
+            dgViewRight.Width = rightPanelInSplit.Width;
         }
     }
 }

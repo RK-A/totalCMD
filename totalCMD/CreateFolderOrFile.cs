@@ -14,10 +14,12 @@ namespace totalCMD
     public partial class CreateFolderOrFile : Form
     {
         private readonly string CurrentPath;
-        public CreateFolderOrFile(string path)
+        public CreateFolderOrFile(string path, Point startPosition)
         {
             CurrentPath = path;
             InitializeComponent();
+            this.StartPosition = 0;
+            this.Location = startPosition;
         }
 
         private void bOK_Click(object sender, EventArgs e)

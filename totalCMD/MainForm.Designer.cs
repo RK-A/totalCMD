@@ -47,6 +47,7 @@ namespace totalCMD
             this.tbPathRight = new System.Windows.Forms.TextBox();
             this.cbRight = new System.Windows.Forms.ComboBox();
             this.panelTools = new System.Windows.Forms.Panel();
+            this.bRename = new System.Windows.Forms.Button();
             this.bDelete = new System.Windows.Forms.Button();
             this.bSetting = new System.Windows.Forms.Button();
             this.bCreate = new System.Windows.Forms.Button();
@@ -211,6 +212,7 @@ namespace totalCMD
             this.dataGridViewTextBoxColumn7,
             this.dataGridViewTextBoxColumn8});
             this.dgViewRight.Dock = System.Windows.Forms.DockStyle.Right;
+            this.dgViewRight.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
             this.dgViewRight.EnableHeadersVisualStyles = false;
             this.dgViewRight.Location = new System.Drawing.Point(6, 20);
             this.dgViewRight.Name = "dgViewRight";
@@ -284,6 +286,7 @@ namespace totalCMD
             this.panelTools.AutoSize = true;
             this.panelTools.BackColor = System.Drawing.Color.White;
             this.panelTools.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.panelTools.Controls.Add(this.bRename);
             this.panelTools.Controls.Add(this.bDelete);
             this.panelTools.Controls.Add(this.bSetting);
             this.panelTools.Controls.Add(this.bCreate);
@@ -293,6 +296,17 @@ namespace totalCMD
             this.panelTools.Name = "panelTools";
             this.panelTools.Size = new System.Drawing.Size(68, 551);
             this.panelTools.TabIndex = 32;
+            // 
+            // bRename
+            // 
+            this.bRename.AutoSize = true;
+            this.bRename.Location = new System.Drawing.Point(3, 189);
+            this.bRename.Name = "bRename";
+            this.bRename.Size = new System.Drawing.Size(57, 36);
+            this.bRename.TabIndex = 4;
+            this.bRename.Text = "Rename";
+            this.bRename.UseVisualStyleBackColor = true;
+            this.bRename.Click += new System.EventHandler(this.bRename_Click);
             // 
             // bDelete
             // 
@@ -309,9 +323,9 @@ namespace totalCMD
             // 
             this.bSetting.BackgroundImage = global::totalCMD.Properties.Resources.setting;
             this.bSetting.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
-            this.bSetting.Location = new System.Drawing.Point(3, 231);
+            this.bSetting.Location = new System.Drawing.Point(3, 243);
             this.bSetting.Name = "bSetting";
-            this.bSetting.Size = new System.Drawing.Size(57, 41);
+            this.bSetting.Size = new System.Drawing.Size(57, 44);
             this.bSetting.TabIndex = 2;
             this.bSetting.UseVisualStyleBackColor = true;
             this.bSetting.Click += new System.EventHandler(this.bSetting_Click);
@@ -382,6 +396,7 @@ namespace totalCMD
             this.infoToolStripLeft.Name = "infoToolStripLeft";
             this.infoToolStripLeft.Size = new System.Drawing.Size(117, 22);
             this.infoToolStripLeft.Text = "Info";
+            this.infoToolStripLeft.Click += new System.EventHandler(this.infoToolStripLeft_Click);
             // 
             // zipToolStripLeft
             // 
@@ -433,6 +448,7 @@ namespace totalCMD
             this.infoToolStripRight.Name = "infoToolStripRight";
             this.infoToolStripRight.Size = new System.Drawing.Size(117, 22);
             this.infoToolStripRight.Text = "Info";
+            this.infoToolStripRight.Click += new System.EventHandler(this.infoToolStripRight_Click);
             // 
             // zipToolStripRight
             // 
@@ -504,6 +520,7 @@ namespace totalCMD
         private System.Windows.Forms.ComboBox cbRight;
         private System.Windows.Forms.Button bSetting;
         private System.Windows.Forms.Button bDelete;
+        private System.Windows.Forms.Button bRename;
     }
 }
 

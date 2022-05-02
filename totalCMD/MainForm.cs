@@ -63,16 +63,16 @@ namespace totalCMD
                     currentDirectory = string.Join("\\", dirInfo.FullName.Split('\\').Skip(1));
                     if (dirInfo.FullName.Replace(path.Split('\\')[0] + "\\", "") != string.Empty)
                     {
-                        answer.Add(new object[] { $"[..]", "<DIR>", "<DIR>", dirInfo.Parent.CreationTime.ToString() });
+                        answer.Add(new object[] { $"[..]", "<DIR>", "<DIR>", dirInfo.Parent.CreationTime });
                     }
                     foreach (var directory in dirInfo.GetDirectories())
                     {
-                        answer.Add(new object[] { $"[{directory.Name}]", "<DIR>", "<DIR>", directory.CreationTime.ToString() });
+                        answer.Add(new object[] { $"[{directory.Name}]", "<DIR>", "<DIR>", directory.CreationTime });
 
                     }
                     foreach (var file in dirInfo.GetFiles())
                     {
-                        answer.Add(new object[] { file.Name, file.Extension, file.Length.ToString("#,#"), file.CreationTime.ToString() });
+                        answer.Add(new object[] { file.Name, file.Extension, file.Length.ToString("#,#"), file.CreationTime });
                     }
                     string[] files = Directory.GetFiles(path);
                     return answer;
@@ -92,7 +92,6 @@ namespace totalCMD
             dgViewLeft.Width = splitContainer.Panel1.Width;
         }
 
-        
         private void MainForm_Load(object sender, EventArgs e)
         {
             cbLeft.Items.AddRange(DriveInfo.GetDrives());
@@ -119,7 +118,102 @@ namespace totalCMD
             }
             Directory.Delete(path);
         }
+        /// <summary>
+        /// Метод удаляющий в выбранные папки или файлы в таблице
+        /// </summary>
+        /// <param name="dgView"></param>
+        /// <param name="path"></param>
+        private void DeleteFileOrDir(DataGridViewSelectedRowCollection dgViewRows, string path)
+        {
+            try
+            {
+                foreach (DataGridViewRow row in dgViewRows)
+                {
+                    if (row.Cells[0].Value.Equals("[..]"))
+                    {
+                        continue;
+                    }
+                    if (row.Cells[1].Value.Equals("<DIR>"))
+                    {
+                        string nameFolder = row.Cells[0].Value.ToString().Replace("[", "").Replace("]", "");
+                        DeleteDir(path + "\\" + nameFolder);
+                    }
+                    else
+                    {
+                        File.Delete(path + "\\" + row.Cells[0].Value);
+                    }
 
+                }
+            }
+            catch (Exception excep)
+            {
+                MessageBox.Show(excep.Message);
+            }
+            
+                
+            
+        }
+
+        private void CopySelectedFilesOrDirs(DataGridViewSelectedRowCollection dgViewRows, string oldPath, string newPath)
+        {
+            try
+            {
+                foreach (DataGridViewRow row in dgViewRows)
+                {
+                    if (row.Cells[0].Value.Equals("[..]") || row.Cells[0].Value.Equals(newPath.Split('\\').Last()))
+                    {
+                        continue;
+                    }
+                    if (row.Cells[1].Value.Equals("<DIR>"))
+                    {
+                        string nameDir = row.Cells[0].Value.ToString().Replace("[", "").Replace("]", "");
+                        string oldPathN = oldPath + "\\" + nameDir;
+                        string newPathN = newPath + "\\" + nameDir;
+                        CopyDir(oldPathN, newPathN);
+                    }
+                    else
+                    {
+                        string nameFile = row.Cells[0].Value.ToString();
+                        string oldPathM = oldPath + "\\" + nameFile;
+                        string newPathM = newPath + "\\" + nameFile;
+                        if (File.Exists(newPathM) && MessageBox.Show($"{nameFile} is exist, overwrite it ?", "Warning", MessageBoxButtons.OKCancel) == DialogResult.OK)
+                        {
+                            File.Copy(oldPathM, newPathM, true);
+                        }
+                        else if (!File.Exists(newPath))
+                        {
+                            File.Copy(oldPathM, newPathM);
+                        }
+                    }
+                }
+            }
+            catch (Exception excep)
+            {
+                MessageBox.Show(excep.Message);
+            }
+            
+        }
+
+        private void CopyDir(string oldPath, string newPath)
+        {
+            DirectoryInfo dirInfo = new DirectoryInfo(oldPath);
+            Directory.CreateDirectory(newPath);
+            foreach (FileInfo file in dirInfo.GetFiles())
+            {
+                if (File.Exists(newPath + "\\" + file.Name) && MessageBox.Show($"{file.Name} is exist, overwrite it ?", "Warning", MessageBoxButtons.OKCancel) == DialogResult.OK)
+                {
+                    file.CopyTo(newPath + "\\" + file.Name, true);
+                }
+                else if (!File.Exists(newPath))
+                {
+                    file.CopyTo(newPath + "\\" + file.Name);
+                }
+            }
+            foreach (DirectoryInfo dir in dirInfo.GetDirectories())
+            {
+                CopyDir(dir.FullName, newPath + "\\" + dirInfo.Name);
+            }
+        }
 
         #region LeftGridView
         //Обновить таблицу по пути
@@ -203,35 +297,18 @@ namespace totalCMD
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void deleteToolStripLeft_Click(object sender, EventArgs e)
+        private async void deleteToolStripLeft_Click(object sender, EventArgs e)
         {
-            var result = MessageBox.Show("Do you really want to delete", "Warning", MessageBoxButtons.OKCancel);
+            var result = MessageBox.Show("Do you really want to delete ?", "Warning", MessageBoxButtons.OKCancel);
             if (result == DialogResult.Cancel)
             {
                 return;
             }
-            try
-            {
-                foreach (DataGridViewRow row in dgViewLeft.SelectedRows)
-                {
-                    if (CheckIsFolderLeft(row.Index))
-                    {
-                        string nameFolder = row.Cells[0].Value.ToString().Replace("[", "").Replace("]", "");
-                        DeleteDir(cbLeft.Text + currentDirectoryLeft + "\\" + nameFolder);
-                    }
-                    else
-                    {
-                        File.Delete(cbLeft.Text + currentDirectoryLeft + "\\" + row.Cells[0].Value);
-                    }
-
-                }
-            }
-            catch (Exception excep)
-            {
-                MessageBox.Show(excep.Message);
-            }
+            string disk = cbRight.Text;
+            await Task.Run(()=> DeleteFileOrDir(dgViewLeft.SelectedRows, disk + currentDirectoryLeft));
             GoPathLeft(cbLeft.Text + currentDirectoryLeft);
         }
+
         /// <summary>
         /// Метод вызывающий контекстное меню
         /// </summary>
@@ -333,6 +410,40 @@ namespace totalCMD
             {
                 dgViewRight.ClearSelection();
             }
+        }
+        /// <summary>
+        /// Обрабатывает нажатие на кнопку info
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void infoToolStripLeft_Click(object sender, EventArgs e)
+        {
+            int index = dgViewLeft.CurrentRow.Index;
+            string name = dgViewLeft.CurrentRow.Cells[0].Value.ToString();
+            string path = cbLeft.Text + currentDirectoryLeft + "\\";
+            string dirName = dgViewLeft.CurrentRow.Cells[0].Value.ToString();
+            dirName = string.Concat(dirName.Skip(1).Take(dirName.Length - 2).ToArray());
+            if (CheckIsFolderLeft(index))
+            {
+                FileInfoForm infoFormDir = new FileInfoForm(new DirectoryInfo(path + dirName));
+                infoFormDir.Show();
+                return;
+            }
+            FileInfoForm infoForm = new FileInfoForm(new FileInfo(path + name));
+            infoForm.Show();
+        }
+        /// <summary>
+        /// Обрабатывает нажатие на кнопку копирования
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private async void copyToolStripLeft_Click(object sender, EventArgs e)
+        {
+            string oldPath = cbLeft.Text + currentDirectoryLeft;
+            string newPath = cbRight.Text + currentDirectoryRight;
+            DataGridViewSelectedRowCollection selectedRows = dgViewLeft.SelectedRows;
+            await Task.Run(()=>CopySelectedFilesOrDirs(selectedRows, oldPath, newPath));
+            GoPathRight(newPath);
         }
         #endregion
 
@@ -464,7 +575,7 @@ namespace totalCMD
             }
         }
 
-        private void deleteToolStripRight_Click(object sender, EventArgs e)
+        private async void deleteToolStripRight_Click(object sender, EventArgs e)
         {
             //  Надо добавить асинк
             var result = MessageBox.Show("Do you really want to delete", "Warning", MessageBoxButtons.OKCancel);
@@ -472,26 +583,28 @@ namespace totalCMD
             {
                 return;
             }
-            try
-            {
-                foreach (DataGridViewRow row in dgViewRight.SelectedRows)
-                {
-                    if (CheckIsFolderRight(row.Index))
-                    {
-                        string nameFolder = row.Cells[0].Value.ToString().Replace("[","").Replace("]","");
-                        DeleteDir(cbRight.Text + currentDirectoryRight + "\\" + nameFolder);
-                    }
-                    else
-                    {
-                        File.Delete(cbRight.Text + currentDirectoryRight + "\\" + row.Cells[0].Value);
-                    }
+            string disk = cbRight.Text;
+            await Task.Run(()=>DeleteFileOrDir(dgViewRight.SelectedRows, disk + currentDirectoryRight));
+            //try
+            //{
+            //    foreach (DataGridViewRow row in dgViewRight.SelectedRows)
+            //    {
+            //        if (CheckIsFolderRight(row.Index))
+            //        {
+            //            string nameFolder = row.Cells[0].Value.ToString().Replace("[","").Replace("]","");
+            //            DeleteDir(cbRight.Text + currentDirectoryRight + "\\" + nameFolder);
+            //        }
+            //        else
+            //        {
+            //            File.Delete(cbRight.Text + currentDirectoryRight + "\\" + row.Cells[0].Value);
+            //        }
 
-                }
-            }
-            catch (Exception excep)
-            {
-                MessageBox.Show(excep.Message);
-            }
+            //    }
+            //}
+            //catch (Exception excep)
+            //{
+            //    MessageBox.Show(excep.Message);
+            //}
             GoPathRight(cbRight.Text + currentDirectoryRight);
         }
 
@@ -508,35 +621,23 @@ namespace totalCMD
             }
         }
 
-        #endregion
-
-        private void copyToolStripLeft_Click(object sender, EventArgs e)
+        private void infoToolStripRight_Click(object sender, EventArgs e)
         {
-            if (dgViewLeft.SelectedRows.Count==1)
+            int index = dgViewRight.CurrentRow.Index;
+            string name = dgViewRight.CurrentRow.Cells[0].Value.ToString();
+            string path = cbRight.Text + currentDirectoryRight + "\\";
+            string dirName = dgViewRight.CurrentRow.Cells[0].Value.ToString();
+            dirName = string.Concat(dirName.Skip(1).Take(dirName.Length - 2).ToArray());
+            if (CheckIsFolderRight(index))
             {
-                string nameFileOrDir = dgViewLeft.CurrentRow.Cells[0].Value.ToString();
-                string oldPath = cbLeft.Text + currentDirectoryLeft + "\\" + nameFileOrDir;
-                string newPath = cbRight.Text + currentDirectoryRight + "\\" + nameFileOrDir;
-                if (CheckIsFolderLeft(dgViewLeft.CurrentRow.Index))
-                {
-                    //Должен быть асинк
-                    //CopyDirectory();
-                    return;
-                }
-                if (File.Exists(newPath) && MessageBox.Show("File is exist, overwrite it ?", "Warning", MessageBoxButtons.OKCancel) == DialogResult.OK)
-                {
-                    File.Copy(oldPath, newPath, true);
-                    GoPathRight(cbRight.Text + currentDirectoryRight);
-                    return;
-                }
-                if (File.Exists(newPath))
-                    return;
-                File.Copy(oldPath, newPath);
-                GoPathRight(cbRight.Text + currentDirectoryRight);
+                FileInfoForm infoFormDir = new FileInfoForm(new DirectoryInfo(path + dirName));
+                infoFormDir.Show();
                 return;
             }
-            // Асинк метод копирования группы файлов
+            FileInfoForm infoForm = new FileInfoForm(new FileInfo(path + name));
+            infoForm.Show();
         }
+        #endregion
 
         private void bCreate_Click(object sender, EventArgs e)
         {
@@ -580,6 +681,16 @@ namespace totalCMD
         private void rightPanelInSplit_SizeChanged(object sender, EventArgs e)
         {
             dgViewRight.Width = rightPanelInSplit.Width;
+        }
+
+        private void bRename_Click(object sender, EventArgs e)
+        {
+            if (dgViewLeft.SelectedRows.Count > 0)
+            {
+                renameToolStripLeft.PerformClick();
+                return;
+            }
+            renameToolStripRight.PerformClick();
         }
     }
 }

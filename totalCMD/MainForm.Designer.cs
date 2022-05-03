@@ -49,7 +49,6 @@ namespace totalCMD
             this.panelTools = new System.Windows.Forms.Panel();
             this.bRename = new System.Windows.Forms.Button();
             this.bDelete = new System.Windows.Forms.Button();
-            this.bSetting = new System.Windows.Forms.Button();
             this.bCreate = new System.Windows.Forms.Button();
             this.bCopy = new System.Windows.Forms.Button();
             this.MenuStripLeft = new System.Windows.Forms.ContextMenuStrip(this.components);
@@ -66,6 +65,8 @@ namespace totalCMD
             this.copyToolStripRight = new System.Windows.Forms.ToolStripMenuItem();
             this.infoToolStripRight = new System.Windows.Forms.ToolStripMenuItem();
             this.zipToolStripRight = new System.Windows.Forms.ToolStripMenuItem();
+            this.bSetting = new System.Windows.Forms.Button();
+            this.bZip = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).BeginInit();
             this.splitContainer.Panel1.SuspendLayout();
             this.splitContainer.Panel2.SuspendLayout();
@@ -286,6 +287,7 @@ namespace totalCMD
             this.panelTools.AutoSize = true;
             this.panelTools.BackColor = System.Drawing.Color.White;
             this.panelTools.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.panelTools.Controls.Add(this.bZip);
             this.panelTools.Controls.Add(this.bRename);
             this.panelTools.Controls.Add(this.bDelete);
             this.panelTools.Controls.Add(this.bSetting);
@@ -319,17 +321,6 @@ namespace totalCMD
             this.bDelete.UseVisualStyleBackColor = true;
             this.bDelete.Click += new System.EventHandler(this.bDelete_Click);
             // 
-            // bSetting
-            // 
-            this.bSetting.BackgroundImage = global::totalCMD.Properties.Resources.setting;
-            this.bSetting.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
-            this.bSetting.Location = new System.Drawing.Point(3, 243);
-            this.bSetting.Name = "bSetting";
-            this.bSetting.Size = new System.Drawing.Size(57, 44);
-            this.bSetting.TabIndex = 2;
-            this.bSetting.UseVisualStyleBackColor = true;
-            this.bSetting.Click += new System.EventHandler(this.bSetting_Click);
-            // 
             // bCreate
             // 
             this.bCreate.AutoSize = true;
@@ -350,6 +341,7 @@ namespace totalCMD
             this.bCopy.TabIndex = 0;
             this.bCopy.Text = "Copy";
             this.bCopy.UseVisualStyleBackColor = true;
+            this.bCopy.Click += new System.EventHandler(this.bCopy_Click);
             // 
             // MenuStripLeft
             // 
@@ -403,6 +395,7 @@ namespace totalCMD
             this.zipToolStripLeft.Name = "zipToolStripLeft";
             this.zipToolStripLeft.Size = new System.Drawing.Size(117, 22);
             this.zipToolStripLeft.Text = "To zip";
+            this.zipToolStripLeft.Click += new System.EventHandler(this.zipToolStripLeft_Click);
             // 
             // MenuStripRight
             // 
@@ -442,6 +435,7 @@ namespace totalCMD
             this.copyToolStripRight.Name = "copyToolStripRight";
             this.copyToolStripRight.Size = new System.Drawing.Size(117, 22);
             this.copyToolStripRight.Text = "Copy";
+            this.copyToolStripRight.Click += new System.EventHandler(this.copyToolStripRight_Click);
             // 
             // infoToolStripRight
             // 
@@ -455,6 +449,29 @@ namespace totalCMD
             this.zipToolStripRight.Name = "zipToolStripRight";
             this.zipToolStripRight.Size = new System.Drawing.Size(117, 22);
             this.zipToolStripRight.Text = "To zip";
+            this.zipToolStripRight.Click += new System.EventHandler(this.zipToolStripRight_Click);
+            // 
+            // bSetting
+            // 
+            this.bSetting.BackgroundImage = global::totalCMD.Properties.Resources.setting;
+            this.bSetting.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
+            this.bSetting.Location = new System.Drawing.Point(4, 287);
+            this.bSetting.Name = "bSetting";
+            this.bSetting.Size = new System.Drawing.Size(57, 44);
+            this.bSetting.TabIndex = 2;
+            this.bSetting.UseVisualStyleBackColor = true;
+            this.bSetting.Click += new System.EventHandler(this.bSetting_Click);
+            // 
+            // bZip
+            // 
+            this.bZip.AutoSize = true;
+            this.bZip.Location = new System.Drawing.Point(3, 231);
+            this.bZip.Name = "bZip";
+            this.bZip.Size = new System.Drawing.Size(57, 36);
+            this.bZip.TabIndex = 5;
+            this.bZip.Text = "ZIP";
+            this.bZip.UseVisualStyleBackColor = true;
+            this.bZip.Click += new System.EventHandler(this.bZip_Click);
             // 
             // MainForm
             // 
@@ -521,6 +538,7 @@ namespace totalCMD
         private System.Windows.Forms.Button bSetting;
         private System.Windows.Forms.Button bDelete;
         private System.Windows.Forms.Button bRename;
+        private System.Windows.Forms.Button bZip;
     }
 }
 

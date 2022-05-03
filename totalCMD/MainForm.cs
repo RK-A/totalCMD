@@ -5,6 +5,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -307,6 +308,7 @@ namespace totalCMD
             string disk = cbRight.Text;
             await Task.Run(()=> DeleteFileOrDir(dgViewLeft.SelectedRows, disk + currentDirectoryLeft));
             GoPathLeft(cbLeft.Text + currentDirectoryLeft);
+            MessageBox.Show("Delete end");
         }
 
         /// <summary>
@@ -444,6 +446,7 @@ namespace totalCMD
             DataGridViewSelectedRowCollection selectedRows = dgViewLeft.SelectedRows;
             await Task.Run(()=>CopySelectedFilesOrDirs(selectedRows, oldPath, newPath));
             GoPathRight(newPath);
+            MessageBox.Show("Copy end");
         }
         #endregion
 
@@ -577,7 +580,6 @@ namespace totalCMD
 
         private async void deleteToolStripRight_Click(object sender, EventArgs e)
         {
-            //  Надо добавить асинк
             var result = MessageBox.Show("Do you really want to delete", "Warning", MessageBoxButtons.OKCancel);
             if (result == DialogResult.Cancel)
             {
@@ -585,27 +587,9 @@ namespace totalCMD
             }
             string disk = cbRight.Text;
             await Task.Run(()=>DeleteFileOrDir(dgViewRight.SelectedRows, disk + currentDirectoryRight));
-            //try
-            //{
-            //    foreach (DataGridViewRow row in dgViewRight.SelectedRows)
-            //    {
-            //        if (CheckIsFolderRight(row.Index))
-            //        {
-            //            string nameFolder = row.Cells[0].Value.ToString().Replace("[","").Replace("]","");
-            //            DeleteDir(cbRight.Text + currentDirectoryRight + "\\" + nameFolder);
-            //        }
-            //        else
-            //        {
-            //            File.Delete(cbRight.Text + currentDirectoryRight + "\\" + row.Cells[0].Value);
-            //        }
-
-            //    }
-            //}
-            //catch (Exception excep)
-            //{
-            //    MessageBox.Show(excep.Message);
-            //}
             GoPathRight(cbRight.Text + currentDirectoryRight);
+            MessageBox.Show("Delete end");
+
         }
 
         private void renameToolStripRight_Click(object sender, EventArgs e)
@@ -636,6 +620,17 @@ namespace totalCMD
             }
             FileInfoForm infoForm = new FileInfoForm(new FileInfo(path + name));
             infoForm.Show();
+        }
+
+        private async void copyToolStripRight_Click(object sender, EventArgs e)
+        {
+            string newPath = cbLeft.Text + currentDirectoryLeft;
+            string oldPath = cbRight.Text + currentDirectoryRight;
+            DataGridViewSelectedRowCollection selectedRows = dgViewRight.SelectedRows;
+            await Task.Run(() => CopySelectedFilesOrDirs(selectedRows, oldPath, newPath));
+            GoPathLeft(newPath);
+            MessageBox.Show("Copy end");
+
         }
         #endregion
 
@@ -691,6 +686,74 @@ namespace totalCMD
                 return;
             }
             renameToolStripRight.PerformClick();
+        }
+
+        private async void zipToolStripLeft_Click(object sender, EventArgs e)
+        {
+            string filePath;
+            string currentDir = cbLeft.Text + currentDirectoryLeft;
+            using (var formZip = new CreateZipForm(currentDir))
+            {
+                if (formZip.ShowDialog() !=DialogResult.OK)
+                {
+                    return;
+                }
+                filePath = formZip.FilePath;
+            }
+            await Task.Run(()=>ZipFileDir(dgViewLeft.SelectedRows, filePath, currentDir));
+            GoPathLeft(currentDir);
+            MessageBox.Show("Zip end");
+        }
+
+        private void ZipFileDir(DataGridViewSelectedRowCollection dgViewRows, string filePath, string dir)
+        {
+            int brieflyDir = 0;
+            while (Directory.Exists(dir+"\\"+brieflyDir))
+            {
+                brieflyDir++;
+            }
+            string pathNewDir = dir + "\\" + brieflyDir;
+            Directory.CreateDirectory(pathNewDir);
+            CopySelectedFilesOrDirs(dgViewRows, dir, pathNewDir);
+            ZipFile.CreateFromDirectory(pathNewDir, filePath);
+            DeleteDir(pathNewDir);
+        }
+
+        private void bCopy_Click(object sender, EventArgs e)
+        {
+            if (dgViewLeft.SelectedRows.Count > 0)
+            {
+                copyToolStripLeft.PerformClick();
+                return;
+            }
+            copyToolStripRight.PerformClick();
+        }
+
+        private async void zipToolStripRight_Click(object sender, EventArgs e)
+        {
+            string filePath;
+            string currentDir = cbRight.Text + currentDirectoryRight;
+            using (var formZip = new CreateZipForm(currentDir))
+            {
+                if (formZip.ShowDialog() != DialogResult.OK)
+                {
+                    return;
+                }
+                filePath = formZip.FilePath;
+            }
+            await Task.Run(() => ZipFileDir(dgViewRight.SelectedRows, filePath, currentDir));
+            GoPathRight(currentDir);
+            MessageBox.Show("Zip end");
+        }
+
+        private void bZip_Click(object sender, EventArgs e)
+        {
+            if (dgViewLeft.SelectedRows.Count > 0)
+            {
+                zipToolStripLeft.PerformClick();
+                return;
+            }
+            zipToolStripRight.PerformClick();
         }
     }
 }
